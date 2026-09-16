@@ -1,0 +1,136 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  @apply bg-cream text-ink antialiased;
+}
+
+/* 录音波形动画 */
+@keyframes eq-bounce {
+  0%,
+  100% {
+    transform: scaleY(0.3);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+
+.eq-bar {
+  transform-origin: center;
+  animation: eq-bounce 0.9s ease-in-out infinite;
+}
+
+/* 流式打字光标 */
+@keyframes caret-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
+.stream-caret::after {
+  content: '▍';
+  margin-left: 1px;
+  animation: caret-blink 0.8s step-end infinite;
+  @apply text-emerald-500;
+}
+
+/* markdown 基础排版 */
+.markdown-body {
+  @apply leading-relaxed break-words;
+}
+.markdown-body p {
+  @apply my-2;
+}
+.markdown-body ul {
+  @apply my-2 list-disc pl-5;
+}
+.markdown-body ol {
+  @apply my-2 list-decimal pl-5;
+}
+.markdown-body h1,
+.markdown-body h2,
+.markdown-body h3 {
+  @apply my-3 font-bold;
+}
+.markdown-body h1 {
+  @apply text-xl;
+}
+.markdown-body h2 {
+  @apply text-lg;
+}
+.markdown-body h3 {
+  @apply text-base;
+}
+.markdown-body code {
+  @apply rounded bg-stone-200/70 px-1 py-0.5 text-sm;
+}
+.markdown-body pre {
+  @apply my-2 overflow-x-auto rounded-xl bg-stone-800 p-3 text-sm text-stone-100;
+}
+.markdown-body pre code {
+  @apply bg-transparent p-0 text-stone-100;
+}
+.markdown-body blockquote {
+  @apply my-2 border-l-4 border-emerald-300 pl-3 text-stone-500;
+}
+/* 小屏下表格转为可横向滚动的块，避免挤压；大屏恢复正常表格布局 */
+.markdown-body table {
+  @apply my-2 block w-full overflow-x-auto border-collapse text-[13px] sm:table sm:text-sm;
+}
+.markdown-body thead th {
+  @apply bg-emerald-50/70 font-semibold text-stone-600;
+}
+.markdown-body th,
+.markdown-body td {
+  @apply whitespace-nowrap border border-stone-200 px-2.5 py-1.5;
+}
+.markdown-body tbody tr:nth-child(even) {
+  @apply bg-stone-50;
+}
+
+/* 全对撒花动画（纯 CSS，不引第三方库） */
+@keyframes confetti-fall {
+  0% {
+    transform: translateY(-10%) rotate(0deg);
+    opacity: 1;
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(320px) rotate(var(--confetti-rotate, 360deg));
+    opacity: 0;
+  }
+}
+
+.confetti-piece {
+  position: absolute;
+  top: 0;
+  animation-name: confetti-fall;
+  animation-timing-function: ease-in;
+  animation-iteration-count: 1;
+  animation-fill-mode: forwards;
+}
+
+/* 打印适配：黑白友好 */
+@media print {
+  body {
+    background: #fff;
+  }
+  a {
+    color: #000;
+    text-decoration: none;
+  }
+}
