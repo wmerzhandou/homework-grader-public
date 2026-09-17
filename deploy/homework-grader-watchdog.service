@@ -1,0 +1,13 @@
+[Unit]
+Description=Homework Grader health watchdog (restarts on hang)
+After=homework-grader.service
+Requires=homework-grader.service
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/homework-grader-watchdog.sh
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
