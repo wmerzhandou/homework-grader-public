@@ -1,0 +1,103 @@
+<!doctype html>
+<html
+  lang="zh-CN"
+  data-composition-variables='[
+    {"id":"narrationDuration","type":"number","label":"旁白时长(秒)","default":20,"min":3,"max":600,"unit":"s"},
+    {"id":"title","type":"string","label":"标题","default":"两道错题讲解","maxLength":40}
+  ]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <!-- 本地 GSAP：渲染环境不联网，禁止改成 CDN -->
+    <script src="assets/gsap.min.js"></script>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body {
+        margin: 0; width: 1920px; height: 1080px; overflow: hidden;
+        background: #0f172a; color: #e2e8f0;
+        font-family: "Noto Sans CJK SC", "Source Han Sans SC", "WenQuanYi Zen Hei", sans-serif;
+      }
+      #root { position: relative; width: 1920px; height: 1080px; padding: 96px 120px; }
+      #title { font-size: 84px; font-weight: 700; color: #f8fafc; }
+      #subtitle { margin-top: 12px; font-size: 40px; color: #94a3b8; }
+      #board { position: absolute; left: 120px; right: 120px; top: 330px; height: 500px; }
+      .card {
+        position: absolute; left: 0; right: 0; top: 0; height: 100%;
+        padding: 44px 52px; border-radius: 28px;
+        background: rgba(30, 41, 59, 0.9); border: 2px solid rgba(148, 163, 184, 0.25);
+      }
+      .card h2 { font-size: 52px; color: #a5b4fc; margin-bottom: 24px; }
+      .card p { font-size: 46px; line-height: 1.5; }
+      .hl { color: #fbbf24; font-weight: 700; }
+      #caption {
+        position: absolute; left: 120px; right: 120px; bottom: 64px;
+        padding: 18px 28px; border-radius: 18px; min-height: 78px;
+        background: rgba(15, 23, 42, 0.85); color: #f8fafc;
+        font-size: 44px; line-height: 1.35; text-align: center;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- 根节点的 data-duration 会被脚本改成"旁白时长"，保证音画同长 -->
+    <div
+      id="root"
+      data-composition-id="main"
+      data-start="0"
+      data-duration="20"
+      data-width="1920"
+      data-height="1080"
+    >
+      <div id="title" class="clip" data-start="0" data-duration="20" data-track-index="0">两道错题讲解</div>
+      <div id="subtitle" class="clip" data-start="0" data-duration="20" data-track-index="0">跟着旁白一步步看</div>
+      <div id="board" class="clip" data-start="0" data-duration="20" data-track-index="1">
+        <div id="card1" class="card">
+          <h2>第 1 题</h2>
+          <p>先算括号：17 + 26 = 43<br />再算退位减法：84 − 43 = <span class="hl">41</span></p>
+        </div>
+        <div id="card2" class="card">
+          <h2>第 2 题</h2>
+          <p>65 ÷ 8 = 8 … 1<br />每人先分 <span class="hl">8</span> 颗，多出的 1 颗给"多分一个"的小朋友</p>
+        </div>
+      </div>
+      <div id="caption" class="clip" data-start="0" data-duration="20" data-track-index="9">字幕</div>
+      <!-- 旁白音频必须是根节点的直接子元素；后端会把它放到 assets/narration.* -->
+      <!-- <audio id="narration" src="assets/narration.mp3" data-start="0" data-duration="20" data-track-index="8"></audio> -->
+    </div>
+    <script>
+      // 关键：所有时间都按"旁白时长"推算，画面与配音同长，不会话没说完就切走
+      const vars = window.__hyperframes.getVariables();
+      const D = Math.max(3, Number(vars.narrationDuration) || 20);
+      const split = Math.round(D * 45) / 100; // 第一题占前 45%
+      const root = document.getElementById("root");
+      root.setAttribute("data-duration", String(D));
+      document.getElementById("title").textContent = vars.title || "两道错题讲解";
+      for (const el of document.querySelectorAll(".clip")) {
+        el.setAttribute("data-duration", String(D));
+      }
+
+      const captions = [
+        [0, "先看第 1 题：84 − (17 + 26)"],
+        [split * 0.5, "先算括号里的 17 + 26 = 43"],
+        [split, "再算 84 − 43 = 41，注意退位"],
+        [split + (D - split) * 0.5, "第 2 题：65 颗糖分给 8 个小朋友"],
+        [D * 0.88, "65 ÷ 8 = 8 … 1，每人 8 颗，余 1 颗"],
+      ];
+
+      const tl = gsap.timeline({ paused: true });
+      tl.fromTo("#title", { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.6 }, 0);
+      tl.fromTo("#board", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.6 }, 0.4);
+      tl.set("#card2", { opacity: 0 }, 0);
+      tl.to("#card1", { opacity: 0, duration: 0.4 }, split);
+      tl.to("#card2", { opacity: 1, duration: 0.4 }, split);
+      captions.forEach(([at, text]) => {
+        tl.call(() => {
+          document.getElementById("caption").textContent = text;
+        }, [], at);
+      });
+      tl.set({}, {}, D); // 时间轴撑到 D，与 data-duration 对齐
+      window.__timelines["main"] = tl;
+      tl.seek(0);
+    </script>
+  </body>
+</html>
