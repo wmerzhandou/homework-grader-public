@@ -1,0 +1,23 @@
+[Unit]
+Description=Homework Grader (FastAPI + codex harness, HTTPS :8040)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=homework
+WorkingDirectory=/opt/homework-grader/backend
+EnvironmentFile=/etc/homework-grader/homework-grader.env
+# --timeout-graceful-shutdown 5：SSE 是长连接，默认优雅关闭会一直等浏览器断开，
+# 重启会卡到 systemd 的 TimeoutStopSec（实测 70s+）。前端自带断线重连，5 秒足够。
+# --no-proxy-headers：当前没有反向代理，uvicorn 默认信任 127.0.0.1 发来的
+# X-Forwarded-For（实测本机发伪造头就会被采纳）。将来前面真加 nginx/caddy 时，
+# 改回 --proxy-headers，并确保用 $remote_addr 覆盖（而不是追加透传）该请求头。
+ExecStart=/opt/homework-grader/backend/.venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 8040 --ssl-keyfile ../frontend/certs/key.pem --ssl-certfile ../frontend/certs/cert.pem --timeout-graceful-shutdown 5 --no-proxy-headers
+Restart=always
+RestartSec=5
+# 内存兜底：超过 4G 直接杀掉重启（由 Restart=always 拉起）
+MemoryMax=4G
+
+[Install]
+WantedBy=multi-user.target
